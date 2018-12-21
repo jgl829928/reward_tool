@@ -3,10 +3,10 @@ using CSV ,HTTP,DataFrames,DelimitedFiles,Dates,TimeZones
 
 # 获取奖励类型及数量
 function rewardInfo()
-    mydata = CSV.read("TestReward.csv")
+    rewards = CSV.read("TestReward.csv")
     rewardStr=""
-    for i in 1:size(mydata, 2)
-        item=mydata[1,i]
+    for i in 1:size(rewards, 2)
+        item=rewards[1,i]
         if i%2==0
             rewardStr="$rewardStr$item,"
         else 
@@ -18,18 +18,19 @@ function rewardInfo()
 end
 
 
+
+
 # # 获取rid
-function ridInfo()
-    mydata = CSV.read("roles.csv")
+function allrid()
+    allRids = CSV.read("roles.csv")
+    sucRid=CSV.read("success.csv")
+    println(sucRid)
     ridAry=[]
-    for i in 1:size(mydata,1)
-        push!(ridAry,mydata[i,:].RID[1])
+    for i in 1:size(allRids,1)
+        push!(ridAry,allRids[i,:].RID[1])
     end 
     return ridAry
 end
-
-ridAry=ridInfo()
-reward=rewardInfo()
 
 
 # 统一写入数据
