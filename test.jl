@@ -1,4 +1,4 @@
-using CSV , HTTP , DataFrames,DelimitedFiles
+using CSV , DataFrames 
 
 # 获取奖励及邮件相关信息
 function rewardInfo()
@@ -59,22 +59,28 @@ function writeRes(filename,rids)
     CSV.write(filename,ptable)
 end
 
+# 每个请求分为单个任务
+function mytask(c::Channel)
+    ridAry=rid()
+    rewardData=rewardInfo()
+    for i in 1:size(ridAry,1)
+        data="rid=$(ridAry[i])&$rewardData"
+        result=String(read(`curl -d "$(data)" http://10.0.21.16:19527/senditemmail`))
+        put!(c, "$(ridAry[i]).$(result)")
+    end
+end;
 
 
 # 发送请求
 function requests()
-    ridAry=rid()
-    rewardData=rewardInfo()
     sucRid=[]
     faliedRid=[]
-    for i in 1:size(ridAry,1)
-        data="rid=$(ridAry[i])&$rewardData"
-        result=String(read(`curl -d "rid=$(ridAry[i])&$rewardData" http://10.0.21.16:19527/senditemmail`))
-        println(result)
-        if result=="success"
-            push!(sucRid,ridAry[i]) 
+    for item in Channel(mytask)
+        itemAry=split(item,".")
+        if itemAry[2]=="success"
+            push!(sucRid,itemAry[1]) 
         else 
-            push!(faliedRid,ridAry[i]) 
+            push!(faliedRid,itemAry[1]) 
         end
     end
     writeRes("success.csv",sucRid)
